@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+        <script src="./JsonExportExcel.min.js"></script>
+        <script>
+            var option={};
+            option.fileName = 'excel'
+            option.datas=[
+            {
+                sheetData:[{one:'一行一列',two:'一行二列'},{one:'二行一列',two:'二行二列'}],
+                sheetName:'sheet',
+                sheetFilter:['two','one'],
+                sheetHeader:['第一列','第二列']
+            },
+            {
+                sheetData:[{one:'一行一列',two:'一行二列'},{one:'二行一列',two:'二行二列'}]
+            }
+            ];
+            var toExcel=new ExportJsonExcel(option);
+            toExcel.saveExcel();
+        </script>
+</body>
+</html>

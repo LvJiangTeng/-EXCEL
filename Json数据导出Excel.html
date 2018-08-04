@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <a href="./hehe报表数据 (1).csv" download>下载呢</a>
+    <script>
+
+        var data=[{username:123,password:123},{username:234,password:234}]
+        var JSONData=[
+            {"id":"1","title":"BeJSON","url":"www.bejson.com"},
+            {"id":"2","title":"layui","url":"www.layui.com"}
+        ]
+        JSONToCSVConvertor(JSONData,"hehe")
+        /**
+         * 导出csv数据
+         * @param JSONData
+         * @param ReportTitle
+         * @param ShowLabel
+         * @constructor
+         */
+        function JSONToCSVConvertor(JSONData, ReportTitle, ShowLabel) {
+            var arrData = typeof JSONData != 'object' ? JSON.parse(JSONData) : JSONData;
+            var fileName = "";
+            fileName += ReportTitle.replace(/ /g,"_") + "报表数据";
+            var userAgent = navigator.userAgent; //取得浏览器的userAgent字符串
+            var isOpera = userAgent.indexOf("Opera") > -1; //判断是否Opera浏览器
+            // console.log(userAgent)
+            var isIE = !!window.ActiveXObject || "ActiveXObject" in window //判断是否IE浏览器
+            var CSV = 'data:text/csv;charset=utf-8,\ufeff';
+            if(isIE){
+                CSV = '\ufeff';
+            }
+            CSV += ReportTitle + '\r\n\n';
+            if (ShowLabel) {
+                var row = "";
+                for (var index in arrData[0]) {
+                    row += index + ',';
+                }
+                row = row.slice(0, -1);
+                CSV += row + '\r\n';
+            }
+            for (var i = 0; i < arrData.length; i++) {
+                var row = "";
+                for (var index in arrData[i]) {
+                    row += '"' + arrData[i][index] + '",';
+                }
+                row.slice(0, row.length - 1);
+                CSV += row + '\r\n';
+            }
+            if (CSV == '') {
+                alert("Invalid data");
+                return;
+            }
+            //IE只能使用Blob文件下载，不支持URI，详见:
+            //https://technet.microsoft.com/ZH-CN/Library/hh779016.aspx
+            // var link = document.createElement("a");
+            //     link.href = encodeURI(CSV);
+            //     link.style = "visibility:hidden";
+            //     link.download = fileName + ".csv";
+            //     document.body.appendChild(link);
+            //     link.click();
+            //     document.body.removeChild(link);
+            
+            if(isIE){
+                console.log(encodeURI(CSV))
+                // window.open(encodeURI(CSV), "hehe.csv", '', true)
+                window.open(CSV, "hehe.csv", '', true)
+                var blob = new Blob([decodeURIComponent(encodeURI(CSV))], {
+                    type: "text/csv;charset=utf-8;"
+                });
+                console.log(blob)
+                window.navigator.msSaveBlob(blob, fileName + ".csv")
+            }
+            else{
+                var link = document.createElement("a");
+                link.href = encodeURI(CSV);
+                link.style = "visibility:hidden";
+                link.download = fileName + ".csv";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+        /**
+         * 原始Data数据转导出的Json数据,Data结构[{},{},{},{}];
+         * dataArray:原始数据数组
+         * dataColumns：data中key名称数组，例如['username','password']
+         * exportColumns：导出的Json中需要显示的名称数组，例如['用户名','密码']
+         * formatColumns：需要的位置format函数数组
+         */
+        function dataToExportJson(dataArray,dataColumns,exportColumns,formatColumns){
+            if(dataColumns.length != exportColumns.length){
+                return null;
+            }
+            var exportDataArg = [];
+            //遍历原数组
+            for(var j = 0;j<dataArray.length;j++){
+                var tempObject = {};
+                //遍历对象，拿到对象属性
+                for(var i = 0;i<dataColumns.length;i++){
+                    var tempData = dataArray[j][dataColumns[i]];
+                    if(formatColumns){
+                        //判断是否需要格式转换
+                        if(formatColumns[i] != null && formatColumns[i] != ""){
+                            tempData = formatColumns[i](tempData);
+                        }
+                    }
+                    tempObject[exportColumns[i]] = tempData;
+                }
+                exportDataArg.push(tempObject);
+            }
+            return exportDataArg;
+        }
+        /**
+         * 原始Data数据转导出的Json数据,Data结构[,,,][,,,];
+         * dataArray1:原始数据数组1
+         * dataArray2：原始数据数组2
+         * exportColumns：导出的Json中需要显示的名称数组,长度只能为2
+         * formatColumns1：对原数组1需要的位置format函数数组
+         * formatColumns2: 对原数组2需要的位置format函数数组
+         */
+        function dataAndDataToExportJson(dataArray1,dataArray2,exportColumns,formatColumn1,formatColumn2){
+                if(dataArray1.length != dataArray2.length){
+                    return null;
+                }
+                var exportDataArg = [];
+                //遍历原数组
+                for(var i = 0;i<dataArray1.length;i++){
+                    var tempObject = {};
+                    var tempData1 = dataArray1[i];
+                    var tempData2 = dataArray2[i];
+                    if(formatColumn1){
+                        //判断是否需要格式转换
+                        tempData1 = formatColumn1(tempData1);
+                    }
+                    if(formatColumn2){
+                        //判断是否需要格式转换
+                        tempData2 = formatColumn2(tempData2);
+                    }
+                    tempObject[exportColumns[0]] = tempData1;
+                    tempObject[exportColumns[1]] = tempData2;
+                    exportDataArg.push(tempObject);
+                }
+                return exportDataArg;
+            }
+            /**
+             * 原始Data数据转导出的Json数据,Data结构[[,,,][,,,][,,,]],且数组中每个数组的长度相同;
+             * dataArray:原始二维数据数组,
+             * exportColumns：导出的Json中需要显示的名称数组,长度跟二维数组的长度相同
+             * formatColumns：对原二维数组中每一个数组需要的位置format函数数组,长度跟二维数组的长度相同
+             */
+            function anyDataToExportJson(dataArray,exportColumns,formatColumns){
+                    if(dataArray.length != exportColumns.length){
+                        return null;
+                    }
+                    var exportDataArg = [];
+                    //没个数组长度相同，直接取第一个数组长度
+                    for(var i = 0;i < dataArray[0].length;i++) {
+                        var tempObject = {};
+                        for (var j = 0; j < dataArray.length; j++) {
+                            var tempData = dataArray[j][i];
+                            var exportColumnName = exportColumns[j];
+                            //判断是否需要格式转换
+                            if(formatColumns[j]){
+                                tempData = formatColumns[j](tempData);
+                            }
+                            tempObject[exportColumnName] = tempData;
+                        }
+                        exportDataArg.push(tempObject);
+                    }
+                    return exportDataArg;
+                }
+    </script>
+</body>
+</html>

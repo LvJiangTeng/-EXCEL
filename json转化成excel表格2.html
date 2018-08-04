@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+        <script>
+                 var JSONData=[
+	{"id":"1","title":"BeJSON","url":"www.bejson.com"},
+	{"id":"2","title":"layui","url":"www.layui.com"}
+]
+                    function c(t,o){
+                        $("#ctype").val(t);
+                        $("#sels").text($(o).text());
+                    }
+                    var fgf = ",";
+                    function ctyperow(){
+                        fgf = $("#fgfstr").val()||fgf ;
+                        var instr = $("#in").val();
+                        var jsons = JSON.parse(instr);
+                        if(jsons.length<1){
+                            alert("数组小于一行数据");return;
+                        }
+                        var titles = new Array();
+                        for (var key in jsons[0]) {
+                            titles.push(key);
+                        }
+                        
+                        var values = new Array();
+                        for (var i = 0, l = jsons.length; i<l; i++) {
+                            var value = new Array();
+                            for (var key in jsons[i]) {
+                                
+                                value.push(jsons[i][key]);
+                            }
+                            values.push(value);
+                        }
+                        
+                        var html = '';
+                        html+=titles.join(fgf)+"\n"
+                        for(var i=0;i<values.length;i++){
+                            html+=values[i].join(fgf)+"\n";
+                        }
+                       console.log(html)
+                    }
+                    
+                    $("#download").click(function(){
+                            var content = $('#out').val();
+                        var blob = new Blob([content], {type: "text/plain;charset=utf-8"});
+                            saveAs(blob, "content.csv");
+                        });
+            
+                        
+                    $("#changebtn").click(function(){
+                        ctyperow(true);
+                    });
+                </script>
+</body>
+</html>
